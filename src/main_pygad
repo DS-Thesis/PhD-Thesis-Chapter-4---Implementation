@@ -1,0 +1,57 @@
+import pygad
+import config
+import dataset as ds
+import genetic as gen
+
+
+def fitness_function(ga_instance, solution, solution_index):
+    values = solution
+    agent = gen.Chromosome(data.graph)
+    agent.set_values(values)
+    _, fit, _ = agent.evaluate(data.train)
+    return fit
+
+
+if __name__ == "__main__":
+    
+    data = ds.Dataset(config.PATH)
+    data.split_train_test(0.7)
+
+    # Initialize the population
+    num_genes = 12
+    num_generations=50
+    crossover_type = "single_point"
+    parent_selection_type = "sss"
+    num_parents_mating=4
+    keep_parents = 1
+    mutation_type = "random"
+    ga_instance = pygad.GA(num_generations=num_generations,
+                       num_parents_mating=num_parents_mating,
+                       fitness_func=fitness_function,
+                       sol_per_pop=8,
+                       num_genes=num_genes,
+                       init_range_low=0.0,
+                       init_range_high=1.0,
+                       parent_selection_type=parent_selection_type,
+                       keep_parents=keep_parents,
+                       crossover_type=crossover_type,
+                       mutation_type=mutation_type,
+                       gene_space=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+
+    # Run the PyGAD optimization
+    ga_instance.run()
+
+    # Get the best solution found by PyGAD
+    solution, solution_fitness, sol_idx = ga_instance.best_solution()
+
+    # Print the best solution
+    # print("Best Solution:", solution)
+    # print("Fitness Value:", solution_fitness)
+    
+    agent = gen.Chromosome(data.graph)
+    agent.set_values(solution)
+    _, fit, _ = agent.evaluate(data.train)
+    print("Train:", fit, "/", len(data.train))
+    _, fit, _ = agent.evaluate(data.test)
+    print("Test:", fit, "/", len(data.test))
+    print(repr(agent.graph))

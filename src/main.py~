@@ -1,0 +1,251 @@
+import config
+import dataset as ds
+import genetic as ga
+from tqdm import tqdm
+import random as rd
+import pygad_snippets as pgs
+import time
+import test
+import argparse
+import statistics as st
+
+from graph_generator import GraphGenerator
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--noise", help="explicitly add noise", type = float)
+parser.add_argument("--function", help="explicitly use a certain function to calculate final weights noise", type = int)
+parser.add_argument("--considerations", help="generate with n considerations", type = int)
+parser.add_argument("--randomize", help="randomize each function for each case")
+args = parser.parse_args()
+
+if args.noise:
+    config.NOISE = args.noise
+ if args.function:
+    config.EVAL_FUNCTION = args.function
+if args.considerations:
+    config.NB_REASONS = args.considerations
+if args.randomize:
+    config.RANDOMIZE = 1           
+
+def format_data(preds, acc):
+    dic = dict()
+    dic["data"] = []
+    for d in preds:
+        dic["data"].append(d)
+    dic["accuracy"] = acc
+    return dic
+
+
+def export_history(h, path="./output.csv"):
+    csv = []
+    nb_col = 0
+
+    data = []
+    for d in h["run"][-1]["train"]["data"]:
+        data.append((d[0], d[2]))
+    for d in h["run"][-1]["test"]["data"]:
+        data.append((d[0], d[2]))
+    data = sorted(data, key=lambda x: str(x[0]))
+
+    for i in range(len(data) + 1):
+        index = i - 1
+        csv.append([])
+
+        if i > 0:  # table content
+            inp = data[index][0]
+            csv[-1].append(str(inp))
+            csv[-1].append(str(data[index][1]))
+            
+            for k in range(len(h["run"])):  # look for matching input and write if it get it right or wrong
+                r = h["run"][k]
+                found = False
+                correct = True
+                for t in r["train"]["data"]:
+                    if t[0] == inp:
+                        if t[3]:
+                            csv[-1].append("OK")
+                        else:
+                            correct = False
+                        found = True
+                        break
+                if not found:
+                    for t in r["test"]["data"]:
+                        if t[0] == inp:
+                            if t[3]:
+                                csv[-1].append("OK")
+                            else:
+                                correct = False
+                            found = True
+                            break
+                if not correct:
+                    csv[-1].append(str(t[1]))
+
+        else:  # header
+            csv[-1].append(str("Input"))
+            csv[-1].append(str("Label"))
+            for k in range(len(h["run"])):
+                csv[-1].append("Run " + str(k))
+            nb_col = 2 + len(h["run"])
+
+    csv_string = ""
+    sep = ';'
+    for i in range(len(csv)):
+        for j in range(len(csv[i])):
+            csv_string += csv[i][j] + sep
+        csv_string += '\n'
+
+    for k in range(len(h["run"])):
+        csv_string += "\nRun " + str(k) + " graph\n"
+        csv_string += h["run"][k]["graph"]
+
+    f = open(path, "w")
+    f.write(csv_string)
+    f.close()
+
+
+def fitness_function_basic(ga_instance, solution, solution_index):
+        if solution_index == 1:
+            if ga_instance.generations_completed % 10 == 0:
+                #print("Generation =", ga_instance.generations_completed, "/", config.STEPS)
+                pass
+        values = solution
+        agent = ga.Chromosome(data.graph)
+        agent.id = solution_index
+        agent.set_values(values)
+        _, fit, _ = agent.evaluate(data.train)
+        return fit
+
+
+def get_best(instance, d):
+    
+    solution, _, _ = instance.best_solution()
+    values = solution
+    agent = ga.Chromosome(data.graph)
+    agent.set_values(values)
+    #print(repr(agent.graph))
+    return agent.evaluate(d, verbose=False)
+
+
+def get_convergence(instance):
+    best_fitness = instance.best_solutions_fitness
+    # Print the best fitness at each step
+    convergence = 0
+    best_fitness_saved = None
+    for generation, fitness in enumerate(best_fitness):
+        #fitness = max(fitness_all)
+        if best_fitness_saved is None or fitness > best_fitness_saved:
+            best_fitness_saved = fitness
+            convergence = generation
+    return convergence
+    
+
+def get_best_agent(instance):
+    solution, _, _ = instance.best_solution()
+    values = solution
+    agent = ga.Chromosome(data.graph)
+    agent.set_values(values)
+    return agent
+
+def get_delta(graph, data):
+    '''
+    Get the average difference between the solution weights and the data weights.
+    '''
+    delta = 0
+    count = 0
+    for e in graph.edges:
+        delta += abs(graph.weights[e] - round(data.graph.weights[e], config.PRECISION))
+        count += 1
+    return delta / count
+
+
+
+if __name__ == "__main__":
+
+    # test functions
+    test.testing()
+
+    history = dict()
+    seed = config.SEED if config.SEED is not None else rd.randint(0, int(float('inf')))
+    rd.seed(seed)
+    history["seed"] = seed
+
+    nb_run = config.NB_RUN
+    history["nb_run"] = nb_run
+    steps = config.STEPS
+    history["steps"] = steps
+
+    data_list = []  # preload data to avoid random seed change with mutation count change
+    start_time = time.time()  # time
+
+    #print("Generate data...")
+    for i in range(nb_run):
+        if config.USE_RANDOM_DATA:
+            gg = GraphGenerator(config.NB_ACTIONS, config.NB_REASONS, config.MAX_DEPTH)
+            gg.generate()
+            gen_data = gg.generate_data(config.DATA_COUNT)
+            data_list.append(gen_data)
+        else:
+            data_list.append(ds.Dataset(config.PATH, config.DATA_RATIO))
+    
+    total_train = 0
+    total_test = 0
+    average_train = 0
+    average_test = 0
+
+    history["run"] = []
+
+    # -----------------------------------------
+
+    for k in tqdm(range(nb_run), desc="Total", position=0):
+        data = data_list[k]  # load data of the current run
+        
+        # instance and train
+        nb_gene = len(data.graph.edges)
+
+        with tqdm(total=config.STEPS, leave=False) as pbar:
+            gen = pgs.init(fitness_function_basic, nb_gene, pbar)
+            
+            gen.run()
+
+        #print("Converged at step", get_convergence(gen))
+        # gen.plot_fitness()
+
+        # test
+        acc_train, score_train, pred_train = get_best(gen, data.train)
+        acc_test, score_test, pred_test = get_best(gen, data.test)
+        average_train += acc_train
+        average_test += acc_test
+        total_train += score_train
+        total_test += score_test
+
+        best_agent = get_best_agent(gen)
+        history["run"].append(dict())
+        history["run"][-1]["train"] = format_data(pred_train, round(acc_train, 1))
+        history["run"][-1]["test"] = format_data(pred_test, round(acc_test, 1))
+        history["run"][-1]["graph"] = repr(best_agent.graph)
+        history["run"][-1]["convergence"] = get_convergence(gen)
+        history["run"][-1]["delta"] = get_delta(best_agent.graph, data)
+
+        #print(repr(best_agent.graph))
+        #print(repr(data.graph))
+
+    end_time = time.time()
+
+    history["results"] = dict()
+    history["results"]["train"] = round(average_train / nb_run, 1)
+    history["results"]["test"] = round(average_test / nb_run, 1)
+
+    export_history(history)
+
+    precision = 1
+
+    #print("Train:", round(average_train / nb_run, 2), "% - ", total_train, "/", len(data.train) * nb_run)
+    #print("Test:", round(average_test / nb_run, 2), "% - ", total_test, "/", len(data.test) * nb_run)
+    print("Average train acc.: ", round(average_train / nb_run, precision), "%", "+-",
+            round(st.stdev([r["train"]["accuracy"] for r in history["run"]]), precision) if nb_run > 1 else 0)
+    print("Average test acc.: ", round(average_test / nb_run, precision), "%", "+-",
+            round(st.stdev([r["test"]["accuracy"] for r in history["run"]]), precision) if nb_run > 1 else 0)
+    print("Average time:", round((end_time - start_time) / nb_run, 1), "seconds")
+    print("Average Convergence:", round(sum([r["convergence"] for r in history["run"]]) / nb_run, 1), "steps")
+    print("Average Delta:", round(sum([r["delta"] for r in history["run"]]) / nb_run, config.PRECISION))

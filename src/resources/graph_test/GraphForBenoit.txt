@@ -1,0 +1,137 @@
+You have three options for tonight. Either, you go to the movies with a Friend (MOVIES) or you have Dinner with your Mom (MOMDINNER) or you attent a political Event (POLITICS). All three have various reasons speaking in favor of performing the actions.
+For MOVIES, there is one reason: you've promised your friend to go to the movies with her (PROMISE) This is amplified by the fact that you were very insistent that you would keep your promise (INSIST). But, as soon as your friend hears about the other possible ways you could spend your evening, she releases you from your promise (RELEASE).
+For MOMDINNER, there are two reasons. First, your favourite cake is served at the restaurant (CAKE). But this fact is attenuated by the fact, that you know that today the baker is subpar (BAKER). Second, your Mom will be very happy to see you (HAPPY). This reason is amplified by two facts. First, it's mothers day (MOTHERSDAY) and second, you haven't seen your mother in a long time (LONGTIME).
+For POLITICS, there are two reasons speaking in favor of attending the meeting. First, the meeting deals with an important cause (CAUSE) and second, there is going to be a vote tonight about future actions (VOTE). The important of this vote is amplified by the same fact that serves as a reason to attend. It is an important issue. But this reason is also attenuated by a further fact. The outcome of the vote is likely not going to be close and your attendance will probably not make a difference (NOTCLOSE).
+
+#MOVIES                         %1
+#MOMDINNER                      %2
+#POLITICS                       %3
+!PROMISE,MOVIES,+               %4
+!INSIST,PROMISE,+               %5
+?RELEASE,(PROMISE,MOVIES)       %6
+!CAKE,MOMDINNER,+               %7
+!BAKER,CAKE,-                   %8
+!MOMHAPPY,MOMDINNER,+           %9
+!LONGTIME,MOMHAPPY,+            %10
+!MOTHERSDAY,MOMHAPPY,+          %11
+!CAUSE,POLITICS,+               %12
+!VOTE,POLITICS,+                %13
+!CAUSE,VOTE,+                   %14
+!NOTCLOSE,VOTE,-                %15
+
+(1,2,3)(1,2,3)
+(1,2)(1,2)
+(1,3)(1,3)
+(2,3)(2,3)
+(1)(1)
+(2)(2)
+(3)(3)
+(1,2,4,6,9)(2)
+(1,2,4,6,9,10)(2)
+(1,2,4,6,9,11)(2)
+(1,2,4,6,9,10,11)(2)
+(1,2,4,6,7,8)(2)
+(1,2,4,6,7)(2)
+(1,2,4,7,8)(1)
+(1,2,4,7)(1)
+(1,2,4,9)(1)
+(1,2,4,5,9)(1)
+(1,2,4,5,9,11)(1)
+(1,2,4,5,9,10)(1)
+(1,2,4,5,9,10,11)(1)
+(1,2,4,5,9,7)(1)
+(1,2,4,5,9,7,8)(1)
+(1,2,4,5,9,7,8,10)(1)
+(1,2,4,5,9,7,8,11)(1)
+(1,2,4,5,9,7,8,10,11)(1)
+(1,2,4,5,9,7,10,11)(1)
+(1,3,4,12,13,14)(1)
+(1,3,4,12,13,14,15)(1)
+(1,3,4,6,12,13,14,15)(3)
+(1,3,4,6,12)(3)
+(1,3,4,6,13)(3)
+(1,3,4,6,12,13,14)(3)
+(1,3,4,5,13,15)(1)
+(1,3,4,5,12)(1)
+(1,3,12)(3)
+(1,3,13,15)(3)
+(1,3,4,12)(1)
+(1,3,4,13)(1)
+(2,3,7)(2)
+(2,3,9)(2)
+(2,3,7,9)(2)
+(2,3,9,10)(2)
+(2,3,9,11)(2)
+(2,3,7,9,10)(2)
+(2,3,7,9,11)(2)
+(2,3,7,9,10,11)(2)
+(2,3,12)(3)
+(2,3,13,15)(3)
+(2,3,12,13,14,15)(3)
+(2,3,12,13,14,9)(3)
+(2,3,12,13,14,7)(3)
+(2,3,13,7)(3)
+(2,3,13,7,8)(3)
+(2,3,12,13,14,7,8)(3)
+(2,3,9,11,10,13,15)(2)
+(2,3,9,11,10,13,15,7,8)(2)
+(2,3,9,11,10,13,15,7)(2)
+(1,2,3,4)(1)
+(1,2,3,4,6)(1,2,3)
+(1,2,3,4,5)(1)
+(1,2,3,4,5,7)(1)
+(1,2,3,4,7,8)(1)
+(1,2,3,4,7)(1)
+(1,2,3,4,5,7,8)(1)
+(1,2,3,4,6,7)(2)
+(1,2,3,4,6,7,8)(2)
+(1,2,3,4,6,7,8,9)(2)
+(1,2,3,4,6,7,8,9,10)(2)
+(1,2,3,4,6,7,8,9,11)(2)
+(1,2,3,4,6,7,8,9,10,11)(2)
+(1,2,3,4,6,9)(2)
+(1,2,3,4,6,9,10)(2)
+(1,2,3,4,6,9,11)(2)
+(1,2,3,4,6,9,10,11)(2)
+(1,2,3,4,5,6,7)(2)
+(1,2,3,4,5,6,7,8)(2)
+(1,2,3,4,5,6,7,8,9)(2)
+(1,2,3,4,5,6,7,8,9,10)(2)
+(1,2,3,4,5,6,7,8,9,11)(2)
+(1,2,3,4,5,6,7,8,9,10,11)(2)
+(1,2,3,4,5,6,9)(2)
+(1,2,3,4,5,6,9,10)(2)
+(1,2,3,4,5,6,9,11)(2)
+(1,2,3,4,5,6,9,10,11)(2)
+(1,2,3,7,12)(3)
+(1,2,3,7,8,12)(3)
+(1,2,3,7,13)(3)
+(1,2,3,7,8,13)(3)
+(1,2,3,7,12,13,14)(3)
+(1,2,3,7,8,12,13,14)(3)
+(1,2,3,4,6,7,12)(3)
+(1,2,3,4,6,7,8,12)(3)
+(1,2,3,4,6,7,13)(3)
+(1,2,3,4,6,7,8,13)(3)
+(1,2,3,4,6,7,12,13,14)(3)
+(1,2,3,4,6,7,8,12,13,14)(3)
+(1,2,3,4,5,6,7,12)(3)
+(1,2,3,4,5,6,7,8,12)(3)
+(1,2,3,4,5,6,7,13)(3)
+(1,2,3,4,5,6,7,8,13)(3)
+(1,2,3,4,5,6,7,12,13,14)(3)
+(1,2,3,7,9,10,11,13,15)(2)
+(1,2,3,7,8,9,10,11,13,15)(2)
+(1,2,3,9,10,11,13,15)(2)
+
+
+//GRAPHS TO TEST [We can add more later]
+
+(1,2,4,5,6,7,8,9,10,11)(2)
+(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)(2)
+(1,3,4,5,6,12,13,14,15)(3)
+
+//Calculations for the graph
+
+The weights of the graph is calculated bottom up. If a node $C$ is a leaf, its final weight is its default weight. Otherwise, we sum the (final) weights of its amplifiers (written as $g(a^+_C)$), we sum the (final) weights of its attenuators ($g(a^-_C)$) and we sum the (final) weights of its undercutters $(g(u_C))$.
+Then the final weight of the node is given by $\mathds{1}_{\{0\}} (g(u_C))   * \frac{1 + g(a^+_C)}{1 + g(a^-_C)} * w_C$. Where $\mathds{1}_{\{0\}}$ is the indicator function returning 1 iff the sum of undercutters is exactly $0$.

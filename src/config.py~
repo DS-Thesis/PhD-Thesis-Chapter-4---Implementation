@@ -1,0 +1,45 @@
+
+# ===== PyGAD =====
+PARENT_MATING = 4
+CROSSOVER_TYPE = "single_point"
+PARENT_SELECTION = "sss"  # "rws"; "sss"; "random"
+MUTATION_TYPE = "random"
+
+# ===== Evaluation function =====
+# 1: additive
+# 2: purely multiplicative
+# 3: LORI
+# 4: mixed multiplicative-additive
+EVAL_FUNCTION = 4
+
+# ===== Threshold function =====
+# 1: sum
+# 2: additive
+# 3: solipsistic
+# 4: sum of thresholds
+# 5: double threshold
+# 6: product
+# 7: difference to lowest
+# 8: difference to highest
+THRESHOLD_FUNCTION = 1
+k = 0.6 # parameter k for threshold based functions - applied on actions
+l = 0.3 # parameter l for threshold based functions - applied on reasons
+
+# ===== Meta param =====
+PATH = "src/resources/graph_test/GraphForBenoit.txt"
+SEED = 100
+
+NB_RUN = 10
+STEPS = 100 #100
+PRECISION = 1  # accuracy of the action value
+
+POPSIZE = 10 #10
+
+DATA_RATIO = 0.4 #0.7
+
+USE_RANDOM_DATA = True
+NB_ACTIONS = 5
+NB_REASONS = 30
+MAX_DEPTH = 50
+NOISE = 0.0
+DATA_COUNT = 500
